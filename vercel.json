@@ -2,6 +2,9 @@
   "routes": [
     { "src": "/mobile", "dest": "/mobile.html" },
     { "src": "/biosite", "dest": "/biosite/index.html" },
+    { "src": "/biosite/css/(.*\\.css)", "dest": "/biosite/css/$1", "headers": { "Content-Type": "text/css; charset=utf-8" } },
+    { "src": "/biosite/js/(.*\\.js)", "dest": "/biosite/js/$1", "headers": { "Content-Type": "application/javascript; charset=utf-8" } },
+    { "src": "/biosite/assets/(.*\\.svg)", "dest": "/biosite/assets/$1", "headers": { "Content-Type": "image/svg+xml" } },
     { "src": "/biosite/(.*)", "dest": "/biosite/$1" },
     { "src": "/", "dest": "/index.html" }
   ],
