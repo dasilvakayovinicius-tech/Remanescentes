@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remanescentes — Painel de Tarefas</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#0A0A0A;--red:#CC1100;--white:#F5F5F0;--bg:#FAFAF8;
+  --muted:#6E6E6E;--line:#E0E0DA;--line2:#F0F0EA;
+  --fd:'Barlow Condensed',sans-serif;--fb:'Inter',sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+html,body{background:var(--bg);color:var(--black);font-family:var(--fb);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* BRUSH */
+.brush{position:fixed;top:0;right:0;width:70px;height:100vh;z-index:0;pointer-events:none;opacity:.5}
+
+.app{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:0 0 80px}
+
+/* HEADER */
+.hdr{background:var(--black);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr-logo{font-family:var(--fd);font-weight:900;font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:var(--white)}
+.hdr-logo span{color:var(--red)}
+.hdr-user{display:flex;align-items:center;gap:8px;cursor:pointer}
+.hdr-avatar{width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:13px;font-weight:700;color:#fff}
+.hdr-name{font-family:var(--fd);font-size:13px;font-weight:700;text-transform:uppercase;color:var(--white)}
+
+/* SCREENS */
+.screen{display:none;animation:fadeUp .4s var(--ease)}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* LOGIN */
+.login-wrap{padding:40px 24px;text-align:center}
+.login-logo{font-family:var(--fd);font-weight:900;font-size:52px;line-height:.9;letter-spacing:-.01em;text-transform:uppercase;color:var(--black);margin-bottom:6px}
+.login-logo span{color:var(--red)}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:32px}
+.login-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;text-align:left}
+.login-inp{width:100%;font-family:var(--fb);font-size:16px;padding:14px 16px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--black);transition:border-color .2s;-webkit-appearance:none;margin-bottom:12px}
+.login-inp:focus{outline:none;border-color:var(--red)}
+.login-names{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.name-chip{font-family:var(--fd);font-size:12px;font-weight:700;text-transform:uppercase;padding:6px 12px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;transition:all .2s}
+.name-chip:hover{border-color:var(--red);color:var(--red)}
+.name-chip.selected{border-color:var(--red);background:var(--red);color:#fff}
+
+/* BUTTONS */
+.btn{width:100%;font-family:var(--fd);font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--red);color:#fff;border:none;padding:15px;border-radius:10px;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{opacity:.88}
+.btn-ghost{background:none;border:1.5px solid var(--line);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--black);color:var(--black);opacity:1}
+.btn-sm{width:auto;font-size:11px;padding:7px 14px;border-radius:8px}
+.btn-dark{background:var(--black)}
+
+/* EVENT HEADER */
+.event-hdr{padding:20px 20px 0}
+.event-tag{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.event-tag::before{content:'';width:14px;height:1px;background:var(--red)}
+.event-name{font-family:var(--fd);font-weight:900;font-size:32px;line-height:.95;text-transform:uppercase;color:var(--black);margin-bottom:4px}
+.event-name span{color:var(--red)}
+.event-date{font-size:12px;color:var(--muted);margin-bottom:16px}
+
+/* GLOBAL PROGRESS */
+.global-prog{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 20px 16px}
+.gp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.gp-label{font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.gp-pct{font-family:var(--fd);font-size:18px;font-weight:900;color:var(--red)}
+.gp-bar{height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+.gp-fill{height:4px;background:var(--red);border-radius:99px;transition:width .5s var(--ease)}
+
+/* SECTION LABEL */
+.sec-lbl{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);padding:0 20px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* MINISTRY CARDS (dashboard) */
+.min-cards{padding:0 20px;display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.min-card{background:#fff;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.min-card:hover{border-color:var(--red);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.min-card.highlight{border-color:var(--red);border-width:2px}
+.min-card-hd{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.min-emoji{font-size:20px;flex-shrink:0}
+.min-info{flex:1;min-width:0}
+.min-name{font-family:var(--fd);font-size:16px;font-weight:700;text-transform:uppercase;color:var(--black)}
+.min-count{font-size:11px;color:var(--muted);margin-top:1px}
+.min-prog-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.min-prog-bg{width:56px;height:3px;background:var(--line);border-radius:99px}
+.min-prog-fill{height:3px;background:var(--red);border-radius:99px;transition:width .4s var(--ease)}
+.min-pct{font-family:var(--fd);font-size:12px;font-weight:700;color:var(--muted);min-width:26px;text-align:right}
+.min-badge{font-family:var(--fd);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:#FFF0EE;color:var(--red);flex-shrink:0}
+
+/* TASK LIST */
+.task-hdr{display:flex;align-items:center;gap:10px;padding:16px 20px 10px;cursor:pointer}
+.task-hdr-back{font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer;margin:12px 20px 0;-webkit-tap-highlight-color:transparent}
+.task-hdr-back:hover{color:var(--red)}
+.task-min-name{font-family:var(--fd);font-weight:900;font-size:26px;text-transform:uppercase;color:var(--black);flex:1}
+.task-min-emoji{font-size:26px}
+
+.tasks{padding:0 20px;display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.task{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#fff;border:1.5px solid var(--line);border-radius:10px;transition:border-color .2s}
+.task.done{background:var(--line2);border-color:var(--line)}
+.task-chk{width:20px;height:20px;border-radius:5px;border:2px solid var(--line);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.task.done .task-chk{background:var(--red);border-color:var(--red)}
+.task.done .task-chk::after{content:'✓';font-size:11px;color:#fff;font-weight:700}
+.task-body{flex:1;min-width:0}
+.task-desc{font-size:14px;color:var(--black);line-height:1.4;font-weight:500}
+.task.done .task-desc{text-decoration:line-through;color:var(--muted);font-weight:400}
+.task-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+.task-resp{font-size:11px;color:var(--muted)}
+.task-prazo{font-size:11px;font-weight:600;color:var(--muted)}
+.task-prazo.late{color:#CC6600}
+.task-actions{display:flex;gap:4px;flex-shrink:0;margin-top:1px}
+.task-btn{background:none;border:none;cursor:pointer;color:var(--line);font-size:14px;padding:2px 3px;border-radius:4px;transition:color .15s;opacity:0}
+.task:hover .task-btn{opacity:1}
+.task-btn:hover{color:var(--red)}
+.task-btn.del-btn:hover{color:#CC0000}
+
+/* ADD TASK */
+.add-task-wrap{padding:0 20px;margin-bottom:16px}
+.add-task-form{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:14px;display:none}
+.add-task-form.open{display:block;animation:fadeUp .3s var(--ease)}
+.add-inp{width:100%;font-family:var(--fb);font-size:14px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--black);margin-bottom:8px;-webkit-appearance:none}
+.add-inp:focus{outline:none;border-color:var(--red)}
+.add-inp::placeholder{color:#B0B0A8}
+.add-row{display:flex;gap:8px;flex-wrap:wrap}
+.add-row select{font-family:var(--fb);font-size:13px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--black);flex:1;min-width:0}
+.add-row select:focus{outline:none;border-color:var(--red)}
+.add-actions{display:flex;gap:8px;margin-top:10px}
+
+/* WHATSAPP MSG */
+.wa-box{background:var(--black);border-radius:10px;padding:14px 16px;margin:0 20px 16px;display:none}
+.wa-box.show{display:block;animation:fadeUp .3s var(--ease)}
+.wa-label{font-family:var(--fd);font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.wa-text{font-size:12px;color:#888880;line-height:1.6;white-space:pre-wrap;font-family:monospace;border-bottom:1px solid var(--gray2);padding-bottom:10px;margin-bottom:10px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-overlay.open{display:flex;animation:fadeUp .3s var(--ease)}
+.modal{background:var(--bg);border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:520px}
+.modal-title{font-family:var(--fd);font-weight:900;font-size:22px;text-transform:uppercase;color:var(--black);margin-bottom:16px}
+.modal-inp{width:100%;font-family:var(--fb);font-size:15px;padding:12px 14px;border-radius:9px;border:1.5px solid var(--line);background:#fff;color:var(--black);margin-bottom:10px;-webkit-appearance:none}
+.modal-inp:focus{outline:none;border-color:var(--red)}
+
+/* TOAST */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--black);color:#fff;font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:10px 18px;border-radius:8px;z-index:999;transition:transform .4s var(--ease);white-space:nowrap;border-left:3px solid var(--red)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* EMPTY */
+.empty{text-align:center;padding:24px 20px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<svg class="brush" viewBox="0 0 120 1000" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M70 0 C 50 80,90 160,60 240 C 35 320,95 400,65 480 C 40 560,100 640,58 720 C 30 800,92 880,62 1000 L 120 1000 L 120 0 Z" fill="#CC1100" opacity=".6"/>
+  <path d="M85 0 C 70 100,100 200,80 300 C 65 400,105 500,82 600 C 68 700,108 800,85 1000 L 120 1000 L 120 0 Z" fill="#8B0000" opacity=".35"/>
+</svg>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL NOVA TAREFA OUTRO MINISTÉRIO (só Kayo) -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">Nova tarefa</div>
+    <select class="modal-inp" id="modal-min"></select>
+    <input class="modal-inp" id="modal-desc" placeholder="Descrição da tarefa..." maxlength="120">
+    <input class="modal-inp" id="modal-resp" placeholder="Responsável (opcional)" maxlength="40">
+    <input class="modal-inp" type="date" id="modal-prazo">
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-sm" style="flex:2" onclick="saveModalTask()">Criar tarefa</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <header class="hdr">
+    <div class="hdr-logo">REMANES<span>.</span>CENTES<span>.</span></div>
+    <div class="hdr-user" id="hdr-user" onclick="logout()" style="display:none">
+      <div class="hdr-avatar" id="hdr-avatar">?</div>
+      <div class="hdr-name" id="hdr-name-display"></div>
+    </div>
+  </header>
+
+  <!-- TELA LOGIN -->
+  <div class="screen active" id="screen-login">
+    <div class="login-wrap">
+      <div class="login-logo">PAINEL<br><span>REMANES.</span></div>
+      <div class="login-sub">Selecione ou digite seu nome para entrar</div>
+      <div class="login-label">Quem é você?</div>
+      <div class="login-names" id="login-names"></div>
+      <input class="login-inp" id="login-inp" placeholder="Ou digite seu nome..." maxlength="40">
+      <button class="btn" onclick="doLogin()">Entrar →</button>
+    </div>
+  </div>
+
+  <!-- TELA DASHBOARD -->
+  <div class="screen" id="screen-dash">
+    <div class="event-hdr">
+      <div class="event-tag">Evento ativo</div>
+      <div class="event-name">A SEGUNDA <span>PESCA</span></div>
+      <div class="event-date">08 de agosto de 2026 · Casa do Kayo e Aline</div>
+    </div>
+    <div class="global-prog">
+      <div class="gp-top">
+        <span class="gp-label">Progresso geral</span>
+        <span class="gp-pct" id="gp-pct">0%</span>
+      </div>
+      <div class="gp-bar"><div class="gp-fill" id="gp-fill" style="width:0%"></div></div>
+    </div>
+    <div class="sec-lbl" id="sec-meu">Meu ministério</div>
+    <div class="min-cards" id="cards-meu"></div>
+    <div class="sec-lbl" id="sec-outros">Outros ministérios</div>
+    <div class="min-cards" id="cards-outros"></div>
+    <div style="padding:0 20px;margin-top:4px" id="wrap-btn-kayo" style="display:none">
+      <button class="btn btn-dark" onclick="openModal()">+ Tarefa em qualquer ministério</button>
+    </div>
+  </div>
+
+  <!-- TELA MINISTÉRIO -->
+  <div class="screen" id="screen-min">
+    <div class="task-hdr-back" onclick="showDash()">← Voltar</div>
+    <div class="task-hdr">
+      <div class="task-min-emoji" id="task-min-emoji"></div>
+      <div class="task-min-name" id="task-min-name"></div>
+    </div>
+
+    <div class="add-task-wrap">
+      <button class="btn btn-ghost btn-sm" id="btn-add-task" onclick="toggleAddForm()" style="width:100%">+ Nova tarefa</button>
+      <div class="add-task-form" id="add-task-form">
+        <input class="add-inp" id="add-desc" placeholder="Descrição da tarefa..." maxlength="120">
+        <div class="add-row">
+          <input class="add-inp" id="add-resp" placeholder="Responsável (opcional)" maxlength="40" style="margin:0;flex:1">
+          <input class="add-inp" type="date" id="add-prazo" style="margin:0;flex:1">
+        </div>
+        <div class="add-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddForm()">Cancelar</button>
+          <button class="btn btn-sm" onclick="addTask()">Criar + Copiar WhatsApp</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wa-box" id="wa-box">
+      <div class="wa-label">📋 Mensagem para o WhatsApp</div>
+      <div class="wa-text" id="wa-text"></div>
+      <button class="btn btn-sm" onclick="copyWA()" style="background:#25D366">Copiar mensagem</button>
+    </div>
+
+    <div class="tasks" id="task-list"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbycoQa42bUm3ucw0JpkGQQJSKAd-3-fmm78-ahDkjM1XtHbyyBsreMJKWynFTlcCMEuVQ/exec';
+const PAINEL_LINK = 'https://remanescentes.vercel.app/painel';
+const WHATSAPP_GRUPOS = {
+  louvor: 'https://wa.me/group/louvor',
+  eventos: 'https://wa.me/group/eventos',
+  redes: 'https://wa.me/group/redes',
+  comunicacao: 'https://wa.me/group/comunicacao',
+  intercessao: 'https://wa.me/group/intercessao',
+  tesouraria: 'https://wa.me/group/tesouraria'
+};
+
+// ─── DADOS ──────────────────────────────────────
+const LIDERES = ['Kayo','Aline','Cidinha','Ap. Sandro','Pati Melo','Pr. Neiff','André','Adrian','Ingrid'];
+const ADMIN = ['Kayo'];
+
+const MINISTERIOS = [
+  {id:'louvor',     name:'Louvor',          emoji:'🎸', membros:['Pr. Neiff','Aline','Adrian','Ingrid','Milton']},
+  {id:'eventos',    name:'Eventos & Cultos', emoji:'🎤', membros:['Cidinha','Pati Melo','André','Nath']},
+  {id:'redes',      name:'Redes Sociais',    emoji:'📱', membros:['Adrian']},
+  {id:'comunicacao',name:'Comunicação',      emoji:'📢', membros:['Ap. Sandro']},
+  {id:'intercessao',name:'Intercessão',      emoji:'🙏', membros:['Ap. Sandro']},
+  {id:'tesouraria', name:'Tesouraria',       emoji:'💰', membros:['Pati Melo']},
+];
+
+// ─── TAREFAS INICIAIS ────────────────────────────
+let tasks = [
+  // LOUVOR
+  {id:'l1',min:'louvor',desc:'Escolher 4 louvores iniciais',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'l2',min:'louvor',desc:'Escolher louvor final',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'l3',min:'louvor',desc:'Convidar músicos (instrumentos específicos)',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'l4',min:'louvor',desc:'Realizar ensaio',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'l5',min:'louvor',desc:'Providenciar som e recursos',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'l6',min:'louvor',desc:'Alinhar com Kayo sobre louvores escolhidos e recurso previsto',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'l7',min:'louvor',desc:'Montagem do som 1 dia antes do evento',resp:'',prazo:'2026-08-07',done:false,criadoPor:'Kayo'},
+  // EVENTOS
+  {id:'e1',min:'eventos',desc:'Providenciar cadeiras',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'e2',min:'eventos',desc:'Providenciar / adaptar púlpito',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'e3',min:'eventos',desc:'Planejar e providenciar decoração',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'e4',min:'eventos',desc:'Convidar e coordenar voluntários para servir',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  // REDES SOCIAIS
+  {id:'r1',min:'redes',desc:'Criar convite para redes sociais',resp:'Adrian',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'r2',min:'redes',desc:'Criar convite post e legenda para WhatsApp',resp:'Adrian',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'r3',min:'redes',desc:'Criar convite para impressão (panfleto)',resp:'Adrian',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'r4',min:'redes',desc:'Postar stories sobre o evento diariamente (ângulos variados: convite, testemunhos, louvores, bastidores)',resp:'Adrian',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'r5',min:'redes',desc:'Postar no feed 2x por semana até o evento',resp:'Adrian',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'r6',min:'redes',desc:'Social selling com seguidores — convidar para o culto',resp:'Adrian',prazo:'',done:false,criadoPor:'Kayo'},
+  // COMUNICAÇÃO
+  {id:'c1',min:'comunicacao',desc:'Imprimir materiais de divulgação (convites)',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'c2',min:'comunicacao',desc:'Distribuir materiais nos pontos chave do bairro',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'c3',min:'comunicacao',desc:'Criar campanhas de divulgação (evangelismo, negócios locais, conexão com outras igrejas)',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'c4',min:'comunicacao',desc:'Convidar pessoas pessoalmente e por WhatsApp',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'c5',min:'comunicacao',desc:'Solicitar indicação de convidados aos demais membros e realizar contato',resp:'',prazo:'',done:false,criadoPor:'Kayo'},
+  // INTERCESSÃO
+  {id:'i1',min:'intercessao',desc:'Orar diariamente pelo culto A Segunda Pesca',resp:'Ap. Sandro',prazo:'',done:false,criadoPor:'Kayo'},
+  // TESOURARIA
+  {id:'t1',min:'tesouraria',desc:'Controlar os custos de execução de cada tarefa de cada ministério',resp:'Pati Melo',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'t2',min:'tesouraria',desc:'Levantar a necessidade de recurso para realização do evento',resp:'Pati Melo',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'t3',min:'tesouraria',desc:'Propor meios de arrecadação',resp:'Pati Melo',prazo:'',done:false,criadoPor:'Kayo'},
+  {id:'t4',min:'tesouraria',desc:'Controlar arrecadação',resp:'Pati Melo',prazo:'',done:false,criadoPor:'Kayo'},
+];
+
+// Carrega do localStorage se existir
+async function loadTasks() {
+  try {
+    const res = await fetch(SHEETS_URL + '?action=getTarefas&eventoId=EVT001');
+    const json = await res.json();
+    if (json.status === 'ok' && json.data.length > 0) {
+      tasks = json.data.map(t => ({
+        id: t.id,
+        min: t.ministerio,
+        desc: t.descricao,
+        resp: t.responsavel || '',
+        prazo: t.prazo || '',
+        done: t.status === 'feito',
+        criadoPor: t.criadoPor || 'Kayo'
+      }));
+      renderDash();
+    } else {
+      loadLocal();
+    }
+  } catch(e) {
+    loadLocal();
+  }
+}
+function loadLocal() {
+  try {
+    const saved = localStorage.getItem('rem_tasks_v1');
+    if (saved) { tasks = JSON.parse(saved); renderDash(); }
+  } catch(e) {}
+}
+async function saveTasks() {
+  // Salva local como backup imediato
+  try { localStorage.setItem('rem_tasks_v1', JSON.stringify(tasks)); } catch(e) {}
+}
+async function syncTask(task) {
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'updateTarefa',
+        id: task.id,
+        status: task.done ? 'feito' : 'aberto',
+        descricao: task.desc,
+        responsavel: task.resp,
+        prazo: task.prazo
+      })
+    });
+  } catch(e) {}
+}
+async function syncNewTask(task) {
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'saveTarefa',
+        id: task.id,
+        eventoId: 'EVT001',
+        eventoNome: 'A Segunda Pesca',
+        ministerio: task.min,
+        descricao: task.desc,
+        responsavel: task.resp || '',
+        prazo: task.prazo || '',
+        status: task.done ? 'feito' : 'aberto',
+        criadoPor: task.criadoPor
+      })
+    });
+  } catch(e) {}
+}
+async function syncDeleteTask(id) {
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'deleteTarefa', id: id })
+    });
+  } catch(e) {}
+}
+
+// ─── ESTADO ─────────────────────────────────────
+let currentUser = null;
+let currentMin = null;
+
+function getRole(name) {
+  if (ADMIN.includes(name)) return 'admin';
+  if (LIDERES.includes(name)) return 'lider';
+  return 'membro';
+}
+function getMinisterio(name) {
+  return MINISTERIOS.find(m => m.membros.includes(name));
+}
+function isLider(name, minId) {
+  const role = getRole(name);
+  if (role === 'admin') return true;
+  if (role === 'lider') {
+    const m = getMinisterio(name);
+    return m && m.id === minId;
+  }
+  return false;
+}
+
+// ─── UTILS ──────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function genId() { return 'T' + Date.now() + Math.random().toString(36).slice(2,5); }
+function fmtPrazo(p) {
+  if (!p) return '';
+  const d = new Date(p + 'T00:00:00');
+  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+}
+function isLate(p) {
+  if (!p) return false;
+  return new Date(p) < new Date(new Date().toDateString());
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ─── LOGIN ───────────────────────────────────────
+function buildLoginNames() {
+  const wrap = document.getElementById('login-names');
+  const names = [...LIDERES];
+  wrap.innerHTML = names.map(n =>
+    `<div class="name-chip" onclick="selectName('${n}')">${n}</div>`
+  ).join('');
+}
+function selectName(name) {
+  document.querySelectorAll('.name-chip').forEach(c => c.classList.remove('selected'));
+  const chip = [...document.querySelectorAll('.name-chip')].find(c => c.textContent === name);
+  if (chip) chip.classList.add('selected');
+  document.getElementById('login-inp').value = name;
+}
+function doLogin() {
+  const name = document.getElementById('login-inp').value.trim();
+  if (!name) { showToast('Digite seu nome para entrar'); return; }
+  currentUser = name;
+  try { localStorage.setItem('rem_user', name); } catch(e) {}
+  document.getElementById('hdr-user').style.display = 'flex';
+  document.getElementById('hdr-avatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('hdr-name-display').textContent = name.split(' ')[0];
+  showDash();
+}
+function logout() {
+  currentUser = null;
+  try { localStorage.removeItem('rem_user'); } catch(e) {}
+  document.getElementById('hdr-user').style.display = 'none';
+  document.getElementById('login-inp').value = '';
+  document.querySelectorAll('.name-chip').forEach(c => c.classList.remove('selected'));
+  showScreen('login');
+}
+
+// ─── DASHBOARD ───────────────────────────────────
+function showDash() {
+  currentMin = null;
+  document.getElementById('add-task-form').classList.remove('open');
+  document.getElementById('wa-box').classList.remove('show');
+  showToast('Sincronizando tarefas...');
+  loadTasks().then(() => {
+    renderDash();
+    showScreen('dash');
+  });
+}
+
+function renderDash() {
+  const role = getRole(currentUser);
+  const myMin = getMinisterio(currentUser);
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('gp-pct').textContent = pct + '%';
+  document.getElementById('gp-fill').style.width = pct + '%';
+
+  const cardsMeu = document.getElementById('cards-meu');
+  const cardsOutros = document.getElementById('cards-outros');
+  const secMeu = document.getElementById('sec-meu');
+  const secOutros = document.getElementById('sec-outros');
+
+  cardsMeu.innerHTML = '';
+  cardsOutros.innerHTML = '';
+
+  MINISTERIOS.forEach(m => {
+    const mTasks = tasks.filter(t => t.min === m.id);
+    const mDone = mTasks.filter(t => t.done).length;
+    const mPct = mTasks.length ? Math.round(mDone/mTasks.length*100) : 0;
+    const isMine = myMin && myMin.id === m.id;
+    const card = document.createElement('div');
+    card.className = 'min-card' + (isMine ? ' highlight' : '');
+    card.onclick = () => showMinScreen(m.id);
+    card.innerHTML = `
+      <div class="min-card-hd">
+        <div class="min-emoji">${m.emoji}</div>
+        <div class="min-info">
+          <div class="min-name">${m.name}</div>
+          <div class="min-count">${mDone} de ${mTasks.length} tarefas concluídas</div>
+        </div>
+        ${isMine ? '<div class="min-badge">Meu ministério</div>' : ''}
+        <div class="min-prog-wrap">
+          <div class="min-prog-bg"><div class="min-prog-fill" style="width:${mPct}%"></div></div>
+          <div class="min-pct">${mPct}%</div>
+        </div>
+      </div>`;
+    if (isMine) { cardsMeu.appendChild(card); }
+    else { cardsOutros.appendChild(card); }
+  });
+
+  if (!cardsMeu.children.length) { secMeu.style.display = 'none'; }
+  else { secMeu.style.display = 'flex'; }
+
+  // Botão admin (Kayo)
+  const btnKayo = document.getElementById('wrap-btn-kayo');
+  if (role === 'admin') { btnKayo.style.display = 'block'; }
+  else { btnKayo.style.display = 'none'; }
+}
+
+// ─── MINISTÉRIO ──────────────────────────────────
+function showMinScreen(minId) {
+  currentMin = minId;
+  const m = MINISTERIOS.find(x => x.id === minId);
+  document.getElementById('task-min-emoji').textContent = m.emoji;
+  document.getElementById('task-min-name').textContent = m.name;
+  document.getElementById('add-task-form').classList.remove('open');
+  document.getElementById('wa-box').classList.remove('show');
+  document.getElementById('add-desc').value = '';
+  document.getElementById('add-resp').value = '';
+  document.getElementById('add-prazo').value = '';
+
+  // Só membros do ministério ou admin podem criar tarefas
+  const myMin = getMinisterio(currentUser);
+  const canAdd = getRole(currentUser) === 'admin' || (myMin && myMin.id === minId);
+  document.getElementById('btn-add-task').style.display = canAdd ? 'block' : 'none';
+
+  renderTasks(minId);
+  showScreen('min');
+}
+
+function renderTasks(minId) {
+  const list = document.getElementById('task-list');
+  const minTasks = tasks.filter(t => t.min === minId);
+  if (!minTasks.length) {
+    list.innerHTML = '<div class="empty">Nenhuma tarefa ainda.<br>Que tal criar a primeira?</div>';
+    return;
+  }
+  const role = getRole(currentUser);
+  list.innerHTML = minTasks.map(t => {
+    const canDel = isLider(currentUser, minId);
+    const canEdit = role === 'admin' || t.criadoPor === currentUser || isLider(currentUser, minId);
+    return `<div class="task ${t.done ? 'done' : ''}" id="task-${t.id}">
+      <div class="task-chk" onclick="toggleTask('${t.id}')"></div>
+      <div class="task-body">
+        <div class="task-desc">${t.desc}</div>
+        <div class="task-meta">
+          ${t.resp ? `<span class="task-resp">👤 ${t.resp}</span>` : ''}
+          ${t.prazo ? `<span class="task-prazo ${isLate(t.prazo) && !t.done ? 'late' : ''}">📅 ${fmtPrazo(t.prazo)}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-actions">
+        ${canDel ? `<button class="task-btn del-btn" onclick="deleteTask('${t.id}')" title="Excluir">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTasks();
+  syncTask(t);
+  renderTasks(currentMin);
+  renderDash();
+  showToast(t.done ? '✓ Tarefa concluída!' : 'Tarefa reaberta');
+}
+
+function deleteTask(id) {
+  if (!confirm('Excluir essa tarefa?')) return;
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks();
+  syncDeleteTask(id);
+  renderTasks(currentMin);
+  renderDash();
+  showToast('Tarefa removida');
+}
+
+function toggleAddForm() {
+  const form = document.getElementById('add-task-form');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) {
+    document.getElementById('add-desc').focus();
+  }
+  document.getElementById('wa-box').classList.remove('show');
+}
+
+function addTask() {
+  const desc = document.getElementById('add-desc').value.trim();
+  if (!desc) { showToast('Digite a descrição da tarefa'); return; }
+  const resp = document.getElementById('add-resp').value.trim();
+  const prazo = document.getElementById('add-prazo').value;
+  const m = MINISTERIOS.find(x => x.id === currentMin);
+  const newTask = { id: genId(), min: currentMin, desc, resp, prazo, done: false, criadoPor: currentUser };
+  tasks.push(newTask);
+  saveTasks();
+  syncNewTask(newTask);
+  renderTasks(currentMin);
+  renderDash();
+  document.getElementById('add-desc').value = '';
+  document.getElementById('add-resp').value = '';
+  document.getElementById('add-prazo').value = '';
+  document.getElementById('add-task-form').classList.remove('open');
+
+  // Gera mensagem WhatsApp
+  const msg = `📋 *Nova tarefa — ${m.name}*\n${desc}${resp ? '\n👤 '+resp : ''}${prazo ? '\n📅 Prazo: '+fmtPrazo(prazo) : ''}\n\n👉 Ver painel: ${PAINEL_LINK}`;
+  document.getElementById('wa-text').textContent = msg;
+  document.getElementById('wa-box').classList.add('show');
+  showToast('Tarefa criada! ✓');
+}
+
+function copyWA() {
+  const txt = document.getElementById('wa-text').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    showToast('Mensagem copiada! Cole no WhatsApp 📋');
+  }).catch(() => showToast('Copie o texto acima manualmente'));
+}
+
+// ─── MODAL (Kayo — qualquer ministério) ──────────
+function openModal() {
+  const sel = document.getElementById('modal-min');
+  sel.innerHTML = MINISTERIOS.map(m => `<option value="${m.id}">${m.emoji} ${m.name}</option>`).join('');
+  document.getElementById('modal-desc').value = '';
+  document.getElementById('modal-resp').value = '';
+  document.getElementById('modal-prazo').value = '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function saveModalTask() {
+  const minId = document.getElementById('modal-min').value;
+  const desc = document.getElementById('modal-desc').value.trim();
+  if (!desc) { showToast('Digite a descrição'); return; }
+  const resp = document.getElementById('modal-resp').value.trim();
+  const prazo = document.getElementById('modal-prazo').value;
+  const newT = { id: genId(), min: minId, desc, resp, prazo, done: false, criadoPor: currentUser };
+  tasks.push(newT);
+  saveTasks();
+  syncNewTask(newT);
+  closeModal();
+  renderDash();
+  showToast('Tarefa criada em ' + MINISTERIOS.find(m=>m.id===minId).name + '!');
+}
+
+// ─── INIT ────────────────────────────────────────
+buildLoginNames();
+
+
+
+
+</script>
+</body>
+</html>
