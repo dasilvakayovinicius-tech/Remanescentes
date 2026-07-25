@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Segunda Pesca — Confirmar Presença</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#0A0A0A;--red:#CC1100;--ember:#8B0000;
+  --white:#F5F5F0;--bg:#FAFAF8;
+  --gray:#1A1A1A;--gray2:#2A2A2A;--muted:#6E6E6E;
+  --line:#E0E0DA;--line2:#F0F0EA;
+  --fd:'Barlow Condensed',sans-serif;--fb:'Inter',sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+html,body{background:var(--bg);color:var(--black);font-family:var(--fb);min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+.brush{position:fixed;top:0;right:0;width:80px;height:100vh;z-index:0;pointer-events:none;opacity:.6}
+.wrap{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 0 80px}
+
+/* HEADER */
+.hdr{padding:28px 24px 0;text-align:center}
+.event-tag{display:inline-block;font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);border:1px solid rgba(204,17,0,.3);padding:4px 12px;border-radius:3px;margin-bottom:16px}
+.event-title{font-family:var(--fd);font-weight:900;font-size:48px;line-height:.92;letter-spacing:-.01em;text-transform:uppercase;color:var(--black);margin-bottom:6px}
+.event-title .acc{color:var(--red)}
+.event-sub{font-family:var(--fb);font-size:14px;color:var(--muted);font-style:italic;margin-bottom:16px}
+.event-info{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.event-pill{font-family:var(--fd);font-size:13px;font-weight:700;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:5px}
+.event-pill strong{color:var(--black)}
+
+/* PROGRESS */
+.prog-wrap{padding:24px 24px 0}
+.prog-track{height:3px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.prog-bar{height:3px;background:var(--red);border-radius:99px;transition:width .6s var(--ease);width:0%}
+.prog-meta{display:flex;justify-content:space-between;align-items:center}
+.prog-label{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.prog-steps{font-family:var(--fd);font-size:11px;font-weight:700;color:var(--red)}
+
+/* STEPS */
+.steps{padding:20px 24px 0}
+.step{display:none;animation:fadeUp .45s var(--ease)}
+.step.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.step-eyebrow{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.step-eyebrow::before{content:'';width:16px;height:1px;background:var(--red)}
+.step-q{font-size:20px;font-weight:600;color:var(--black);line-height:1.3;margin-bottom:6px}
+.step-hint{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+
+/* INPUT */
+.field-inp{width:100%;font-family:var(--fb);font-size:16px;padding:14px 16px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--black);transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+.field-inp:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(204,17,0,.1)}
+.field-inp::placeholder{color:#B0B0A8}
+
+/* PILLS */
+.pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.pill{font-family:var(--fd);font-size:14px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:10px 18px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;transition:all .2s var(--ease);user-select:none}
+.pill:hover{border-color:var(--red);color:var(--red)}
+.pill.selected{border-color:var(--red);background:var(--red);color:#fff;transform:scale(1.04)}
+.pill.selected::before{content:'✓ ';opacity:.9}
+
+/* CARDS */
+.card-group{display:flex;flex-direction:column;gap:8px}
+.card-opt{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;border:1.5px solid var(--line);background:#fff;cursor:pointer;transition:all .2s var(--ease);-webkit-tap-highlight-color:transparent}
+.card-opt:hover{border-color:var(--red);background:#FFF8F8}
+.card-opt.selected{border-color:var(--red);background:#FFF0EE}
+.card-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.card-opt.selected .card-dot{background:var(--red);border-color:var(--red)}
+.card-opt.selected .card-dot::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff}
+.card-text{font-size:14px;color:var(--black);font-weight:500;line-height:1.4}
+.card-sub{font-size:12px;color:var(--muted);margin-top:1px}
+
+/* TEXTAREA */
+.field-ta{width:100%;font-family:var(--fb);font-size:15px;padding:14px 16px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--black);resize:none;height:90px;transition:border-color .2s,box-shadow .2s}
+.field-ta:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(204,17,0,.1)}
+.field-ta::placeholder{color:#B0B0A8}
+
+/* CONDITIONAL */
+.conditional{max-height:0;overflow:hidden;transition:max-height .4s var(--ease),opacity .3s;opacity:0;margin-top:0}
+.conditional.open{max-height:200px;opacity:1;margin-top:10px}
+
+/* BUTTONS */
+.btn-next{width:100%;font-family:var(--fd);font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--red);color:#fff;border:none;padding:17px;border-radius:10px;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:24px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-next:hover{opacity:.88}
+.btn-next:active{transform:scale(.98)}
+.btn-back{width:100%;font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:none;border:1.5px solid var(--line);color:var(--muted);padding:12px;border-radius:10px;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn-back:hover{border-color:var(--black);color:var(--black)}
+
+/* DIVIDER */
+.divl{height:1px;background:var(--line2);margin:20px 0}
+
+/* BURST */
+.burst{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--red);border-radius:50%;width:120px;height:120px;display:flex;align-items:center;justify-content:center;font-size:36px;z-index:999;pointer-events:none;transition:transform .35s var(--ease),opacity .35s;opacity:0}
+.burst.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+.burst.hide{transform:translate(-50%,-50%) scale(2);opacity:0}
+
+/* TOAST */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--black);color:#fff;font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:11px 20px;border-radius:8px;z-index:998;transition:transform .4s var(--ease);white-space:nowrap;border-left:3px solid var(--red)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* SUCCESS */
+.success{display:none;padding:20px 24px;text-align:center;animation:fadeUp .5s var(--ease)}
+.success.active{display:block}
+.success-icon{font-size:44px;margin-bottom:8px;display:block}
+.success-title{font-family:var(--fd);font-weight:900;font-size:30px;line-height:.95;text-transform:uppercase;color:var(--black);margin-bottom:6px}
+.success-title .acc{color:var(--red)}
+.success-sub{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px;max-width:340px;margin-left:auto;margin-right:auto}
+
+/* CÓDIGO DO BRINDE */
+.codigo-wrap{background:var(--black);border-radius:16px;padding:20px 20px;margin-bottom:12px;position:relative;overflow:hidden;text-align:center}
+.codigo-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
+.codigo-label{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.codigo-tag{
+  display:inline-block;
+  font-family:var(--fd);font-weight:900;font-size:32px;letter-spacing:.08em;
+  text-transform:uppercase;color:#fff;
+  background:var(--red);border-radius:8px;
+  padding:8px 20px;margin-bottom:8px;
+  position:relative;
+}
+.codigo-tag::after{
+  content:'TOQUE PARA COPIAR';
+  position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);
+  font-family:var(--fd);font-size:9px;font-weight:700;letter-spacing:.1em;
+  color:var(--muted);white-space:nowrap;
+}
+.codigo-instrucao{font-size:12px;color:#888880;line-height:1.5;margin-top:24px}
+.codigo-instrucao strong{color:#fff}
+
+/* BRINDE CARD */
+.brinde-card{background:var(--line2);border-radius:12px;padding:14px 18px;margin-bottom:14px;border-left:3px solid var(--red);text-align:left}
+.brinde-label{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.brinde-title{font-family:var(--fd);font-size:20px;font-weight:700;text-transform:uppercase;color:var(--black);margin-bottom:4px}
+.brinde-text{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* BOTÕES FINAIS */
+.btn-whats{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-family:var(--fd);font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#25D366;color:#fff;border:none;padding:15px;border-radius:10px;cursor:pointer;transition:opacity .2s;text-decoration:none;margin-bottom:12px;box-shadow:0 4px 14px rgba(37,211,102,.35);animation:pulseGlow 2s ease-in-out infinite}
+@keyframes pulseGlow{0%,100%{box-shadow:0 4px 14px rgba(37,211,102,.35)}50%{box-shadow:0 4px 22px rgba(37,211,102,.6)}}
+.btn-whats:hover{opacity:.88}
+
+.verse-block{background:var(--line2);border-radius:10px;padding:16px 18px;margin-top:16px;border-left:2px solid var(--red);text-align:left}
+.verse-text{font-family:var(--fd);font-size:16px;font-weight:700;font-style:italic;color:var(--black);line-height:1.4;margin-bottom:4px}
+.verse-ref{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.logo-footer{font-family:var(--fd);font-weight:900;font-size:16px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:28px;text-align:center}
+.logo-footer span{color:var(--red)}
+
+/* COPIED FEEDBACK */
+.copied-tip{font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);text-align:center;margin-top:32px;opacity:0;transition:opacity .3s}
+.copied-tip.show{opacity:1}
+</style>
+</head>
+<body>
+
+<svg class="brush" viewBox="0 0 120 1000" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M70 0 C 50 80,90 160,60 240 C 35 320,95 400,65 480 C 40 560,100 640,58 720 C 30 800,92 880,62 1000 L 120 1000 L 120 0 Z" fill="#CC1100" opacity=".7"/>
+  <path d="M85 0 C 70 100,100 200,80 300 C 65 400,105 500,82 600 C 68 700,108 800,85 1000 L 120 1000 L 120 0 Z" fill="#8B0000" opacity=".4"/>
+</svg>
+
+<div class="burst" id="burst">🔥</div>
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+  <div class="hdr">
+    <div class="event-tag">08 de agosto · 2026</div>
+    <div class="event-title">A SEGUNDA<br><span class="acc">PESCA</span></div>
+    <div class="event-sub">"Ele vem te resgatar de novo."</div>
+    <div class="event-info">
+      <span class="event-pill">📍 <strong>Casa do Kayo e Aline</strong></span>
+      <span class="event-pill">📖 <strong>Jo 21</strong></span>
+    </div>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-track"><div class="prog-bar" id="progBar"></div></div>
+    <div class="prog-meta">
+      <span class="prog-label" id="progLabel">Confirmação de presença</span>
+      <span class="prog-steps" id="progSteps">1 de 7</span>
+    </div>
+  </div>
+
+  <div class="steps">
+
+    <!-- STEP 1 -->
+    <div class="step active" id="step-1">
+      <div class="step-eyebrow">Vamos começar</div>
+      <div class="step-q">Qual é o seu nome?</div>
+      <div class="step-hint">Pode ser só o primeiro nome, tudo bem.</div>
+      <input class="field-inp" id="f-nome" type="text" placeholder="Seu nome..." autocomplete="given-name" maxlength="50">
+      <button class="btn-next" onclick="next(1)">Continuar →</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step" id="step-2">
+      <div class="step-eyebrow">Contato</div>
+      <div class="step-q">Seu WhatsApp e faixa etária</div>
+      <div class="step-hint">Pra gente entrar em contato e te mandar os detalhes do culto.</div>
+      <input class="field-inp" id="f-tel" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" maxlength="15" style="margin-bottom:12px">
+      <div class="step-q" style="font-size:16px;margin-bottom:10px">Sua faixa etária</div>
+      <div class="pill-group" id="pg-idade">
+        <div class="pill" onclick="selPill('pg-idade',this,'18–22')">18–22</div>
+        <div class="pill" onclick="selPill('pg-idade',this,'23–26')">23–26</div>
+        <div class="pill" onclick="selPill('pg-idade',this,'27–30')">27–30</div>
+        <div class="pill" onclick="selPill('pg-idade',this,'30+')">30+</div>
+      </div>
+      <button class="btn-next" onclick="next(2)">Continuar →</button>
+      <button class="btn-back" onclick="back(2)">← Voltar</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step" id="step-3">
+      <div class="step-eyebrow">Localização</div>
+      <div class="step-q">Qual o seu bairro?</div>
+      <div class="step-hint">Nos ajuda a entender de onde as pessoas estão vindo.</div>
+      <input class="field-inp" id="f-bairro" type="text" placeholder="Ex: Jd. Novo Campos Elíseos..." maxlength="60" style="margin-bottom:20px">
+      <div class="step-q" style="font-size:16px;margin-bottom:10px">Como ficou sabendo do evento?</div>
+      <div class="pill-group" id="pg-canal">
+        <div class="pill" onclick="selPill('pg-canal',this,'Instagram')">Instagram</div>
+        <div class="pill" onclick="selPill('pg-canal',this,'WhatsApp')">WhatsApp</div>
+        <div class="pill" onclick="selPill('pg-canal',this,'Panfleto')">Panfleto</div>
+        <div class="pill" onclick="selPill('pg-canal',this,'Indicação')">Indicação</div>
+      </div>
+      <button class="btn-next" onclick="next(3)">Continuar →</button>
+      <button class="btn-back" onclick="back(3)">← Voltar</button>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step" id="step-4">
+      <div class="step-eyebrow">Sua caminhada</div>
+      <div class="step-q">Você frequenta alguma igreja atualmente?</div>
+      <div class="card-group" id="cg-igreja">
+        <div class="card-opt" onclick="selCard('cg-igreja',this,'Sim, sempre')">
+          <div class="card-dot"></div>
+          <div><div class="card-text">Sim, sempre</div></div>
+        </div>
+        <div class="card-opt" onclick="selCard('cg-igreja',this,'Sim, às vezes')">
+          <div class="card-dot"></div>
+          <div><div class="card-text">Sim, às vezes</div></div>
+        </div>
+        <div class="card-opt" onclick="selCard('cg-igreja',this,'Não no momento')">
+          <div class="card-dot"></div>
+          <div><div class="card-text">Não no momento</div><div class="card-sub">Tudo bem — você é exatamente pra quem esse culto é feito.</div></div>
+        </div>
+      </div>
+      <div class="conditional" id="cond-igreja">
+        <input class="field-inp" id="f-qual-igreja" type="text" placeholder="Qual igreja?" maxlength="60">
+      </div>
+      <button class="btn-next" onclick="next(4)">Continuar →</button>
+      <button class="btn-back" onclick="back(4)">← Voltar</button>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="step" id="step-5">
+      <div class="step-eyebrow">Dons e talentos</div>
+      <div class="step-q">Você participa ou já participou de algum ministério?</div>
+      <div class="card-group" id="cg-min">
+        <div class="card-opt" onclick="selCard('cg-min',this,'Sim, atualmente')">
+          <div class="card-dot"></div>
+          <div><div class="card-text">Sim, atualmente</div></div>
+        </div>
+        <div class="card-opt" onclick="selCard('cg-min',this,'Já participei antes')">
+          <div class="card-dot"></div>
+          <div><div class="card-text">Já participei antes</div></div>
+        </div>
+        <div class="card-opt" onclick="selCard('cg-min',this,'Nunca participei')">
+          <div class="card-dot"></div>
+          <div><div class="card-text">Nunca participei</div><div class="card-sub">Há um primeiro momento pra tudo.</div></div>
+        </div>
+      </div>
+      <div class="conditional" id="cond-min">
+        <input class="field-inp" id="f-qual-min" type="text" placeholder="Qual ministério?" maxlength="80">
+      </div>
+      <button class="btn-next" onclick="next(5)">Continuar →</button>
+      <button class="btn-back" onclick="back(5)">← Voltar</button>
+    </div>
+
+    <!-- STEP 6 -->
+    <div class="step" id="step-6">
+      <div class="step-eyebrow">Sua experiência</div>
+      <div class="step-q">O que mais te alegra num culto?</div>
+      <div class="step-hint">Uma palavra, uma frase — o que vier primeiro.</div>
+      <textarea class="field-ta" id="f-alegra" placeholder="Ex: o louvor espontâneo, sentir a presença de Deus..."></textarea>
+      <div class="divl"></div>
+      <div class="step-q">O que mais te desanima num culto?</div>
+      <div class="step-hint">Pode ser honesto — isso nos ajuda a preparar algo incrível pra você.</div>
+      <textarea class="field-ta" id="f-desanima" placeholder="Ex: quando é muito longo, quando parece forçado..."></textarea>
+      <button class="btn-next" onclick="next(6)">Continuar →</button>
+      <button class="btn-back" onclick="back(6)">← Voltar</button>
+    </div>
+
+    <!-- STEP 7 -->
+    <div class="step" id="step-7">
+      <div class="step-eyebrow">Último passo 🔥</div>
+      <div class="step-q">Vai vir acompanhado?</div>
+      <div class="pill-group" id="pg-acomp" style="margin-bottom:20px">
+        <div class="pill" onclick="selPill('pg-acomp',this,'Sim')">Sim 🙌</div>
+        <div class="pill" onclick="selPill('pg-acomp',this,'Não')">Vou sozinho</div>
+        <div class="pill" onclick="selPill('pg-acomp',this,'Talvez')">Talvez</div>
+      </div>
+      <div class="step-q" style="font-size:16px;margin-bottom:6px">Alguma necessidade especial?</div>
+      <div class="step-hint">Acessibilidade, alimentação, saúde — qualquer coisa que nos ajude a cuidar melhor de você.</div>
+      <input class="field-inp" id="f-nec" type="text" placeholder="Opcional — pode deixar em branco" maxlength="120">
+      <button class="btn-next" onclick="submitForm()" style="background:var(--black);margin-top:24px">
+        🔥 Confirmar minha presença
+      </button>
+      <button class="btn-back" onclick="back(7)">← Voltar</button>
+    </div>
+
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="success">
+    <span class="success-icon">🎣</span>
+    <div class="success-title">VOCÊ ESTÁ<br><span class="acc">DENTRO!</span></div>
+    <div class="success-sub">A rede está sendo lançada, <strong id="nome-confirm"></strong>. Guarda o código abaixo — você vai precisar dele na entrada.</div>
+
+    <div class="codigo-wrap">
+      <div class="codigo-label">🎁 Seu código exclusivo</div>
+      <div class="codigo-tag" id="codigo-display" onclick="copiarCodigo()" style="cursor:pointer"></div>
+      <div class="codigo-instrucao">
+        <strong>⚠️ Para garantir seu brinde, entre no grupo abaixo</strong><br>
+        e apresente esse código na entrada do evento. Não compartilhe — é pessoal.
+      </div>
+      <div class="copied-tip" id="copied-tip">✓ Código copiado!</div>
+    </div>
+
+    <a id="btn-grupo" href="https://chat.whatsapp.com/BsBQp6wkwe22ImVDenDoXv" target="_blank" class="btn-whats" style="margin-top:0">
+      🎁 Entrar no grupo e garantir meu brinde →
+    </a>
+
+    <div class="brinde-card">
+      <div class="brinde-label">Como resgatar</div>
+      <div class="brinde-title">Brinde surpresa 🎁</div>
+      <div class="brinde-text">Entre no grupo do evento, guarde esse código e apresente na entrada no dia <strong>08/08</strong>. Cada código é único e válido pra uma pessoa.</div>
+    </div>
+
+    <div class="verse-block">
+      <div class="verse-text">"Ele vem te resgatar de novo."</div>
+      <div class="verse-ref">Jo 21 · A Segunda Pesca · 08.08.2026</div>
+    </div>
+
+    <div class="logo-footer">REMANES<span>.</span>CENTES<span>.</span></div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIGURAÇÃO ───────────────────────────────────────
+// Quando tiver a URL do Google Sheets, substitua a linha abaixo:
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbycoQa42bUm3ucw0JpkGQQJSKAd-3-fmm78-ahDkjM1XtHbyyBsreMJKWynFTlcCMEuVQ/exec';
+const WHATSAPP_GRUPO = 'https://chat.whatsapp.com/BsBQp6wkwe22ImVDenDoXv';
+// ────────────────────────────────────────────────────────
+
+const TOTAL = 7;
+let current = 1;
+const data = {};
+let codigoGerado = '';
+
+const TOASTS = [
+  null,
+  "Boa! Continuando... 🔥",
+  "Você está arrasando! 💪",
+  "Ótimo! Mais um passo.",
+  "Quase lá... 🎯",
+  "Só mais dois passos!",
+  "Último! Você consegue 🔥"
+];
+
+// Gera código único tipo PESCA-7X3K
+function gerarCodigo() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'PESCA-';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+function updateProg(step) {
+  document.getElementById('progBar').style.width = Math.round((step / TOTAL) * 100) + '%';
+  document.getElementById('progSteps').textContent = step + ' de ' + TOTAL;
+  const labels = ['Vamos começar','Contato','Localização','Sua caminhada','Dons e talentos','Sua experiência','Último passo'];
+  document.getElementById('progLabel').textContent = labels[step - 1] || 'Concluído';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function burst(emoji) {
+  const b = document.getElementById('burst');
+  b.textContent = emoji;
+  b.classList.remove('hide');
+  b.classList.add('show');
+  setTimeout(() => { b.classList.remove('show'); b.classList.add('hide'); }, 600);
+}
+
+function selPill(groupId, el, val) {
+  document.querySelectorAll('#' + groupId + ' .pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  data[groupId] = val;
+  burst('✓');
+}
+
+function selCard(groupId, el, val) {
+  document.querySelectorAll('#' + groupId + ' .card-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  data[groupId] = val;
+  burst('✓');
+  if (groupId === 'cg-igreja') {
+    const cond = document.getElementById('cond-igreja');
+    (val !== 'Não no momento') ? cond.classList.add('open') : cond.classList.remove('open');
+  }
+  if (groupId === 'cg-min') {
+    const cond = document.getElementById('cond-min');
+    (val !== 'Nunca participei') ? cond.classList.add('open') : cond.classList.remove('open');
+  }
+}
+
+function validate(step) {
+  if (step === 1) {
+    const v = document.getElementById('f-nome').value.trim();
+    if (!v) { showToast('Coloca seu nome pra continuar 😊'); return false; }
+    data.nome = v; return true;
+  }
+  if (step === 2) {
+    const tel = document.getElementById('f-tel').value.trim();
+    if (!tel) { showToast('Precisamos do seu WhatsApp 📱'); return false; }
+    if (!data['pg-idade']) { showToast('Seleciona sua faixa etária'); return false; }
+    data.telefone = tel; return true;
+  }
+  if (step === 3) {
+    const b = document.getElementById('f-bairro').value.trim();
+    if (!b) { showToast('Qual o seu bairro?'); return false; }
+    if (!data['pg-canal']) { showToast('Como ficou sabendo do evento?'); return false; }
+    data.bairro = b; return true;
+  }
+  if (step === 4) {
+    if (!data['cg-igreja']) { showToast('Seleciona uma opção'); return false; }
+    data.qualIgreja = document.getElementById('f-qual-igreja').value.trim();
+    return true;
+  }
+  if (step === 5) {
+    if (!data['cg-min']) { showToast('Seleciona uma opção'); return false; }
+    data.qualMin = document.getElementById('f-qual-min').value.trim();
+    return true;
+  }
+  if (step === 6) {
+    const a = document.getElementById('f-alegra').value.trim();
+    const d = document.getElementById('f-desanima').value.trim();
+    if (!a) { showToast('O que te alegra num culto?'); return false; }
+    if (!d) { showToast('O que te desanima? Pode ser honesto 😊'); return false; }
+    data.alegra = a; data.desanima = d; return true;
+  }
+  if (step === 7) {
+    if (!data['pg-acomp']) { showToast('Vai vir acompanhado?'); return false; }
+    data.nec = document.getElementById('f-nec').value.trim();
+    return true;
+  }
+  return true;
+}
+
+function next(from) {
+  if (!validate(from)) return;
+  document.getElementById('step-' + from).classList.remove('active');
+  current = from + 1;
+  document.getElementById('step-' + current).classList.add('active');
+  updateProg(current);
+  if (TOASTS[from]) showToast(TOASTS[from]);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function back(from) {
+  document.getElementById('step-' + from).classList.remove('active');
+  current = from - 1;
+  document.getElementById('step-' + current).classList.add('active');
+  updateProg(current);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function submitForm() {
+  if (!validate(7)) return;
+
+  // Gera código único
+  codigoGerado = gerarCodigo();
+  data.codigo = codigoGerado;
+  data.timestamp = new Date().toISOString();
+
+  // Salva localmente como backup
+  try {
+    const existing = JSON.parse(localStorage.getItem('pesca_confirmacoes') || '[]');
+    existing.push(data);
+    localStorage.setItem('pesca_confirmacoes', JSON.stringify(existing));
+  } catch(e) {}
+
+  // Envia pro Google Sheets (não bloqueia se falhar)
+  if (SHEETS_URL !== 'COLE_AQUI_A_URL_DO_GOOGLE_APPS_SCRIPT') {
+    fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome: data.nome,
+        telefone: data.telefone,
+        idade: data['pg-idade'],
+        bairro: data.bairro,
+        canal: data['pg-canal'],
+        igreja: data['cg-igreja'],
+        qualIgreja: data.qualIgreja || '',
+        ministerio: data['cg-min'],
+        qualMin: data.qualMin || '',
+        alegra: data.alegra,
+        desanima: data.desanima,
+        acompanhado: data['pg-acomp'],
+        nec: data.nec || '',
+        codigo: codigoGerado,
+        timestamp: data.timestamp
+      })
+    }).catch(() => {});
+  }
+
+  // Animação e exibição do sucesso
+  burst('🔥');
+  setTimeout(() => {
+    document.querySelector('.steps').style.display = 'none';
+    document.querySelector('.prog-wrap').style.display = 'none';
+    const s = document.getElementById('success');
+    s.classList.add('active');
+    document.getElementById('nome-confirm').textContent = data.nome.split(' ')[0];
+    document.getElementById('codigo-display').textContent = codigoGerado;
+    document.getElementById('progBar').style.width = '100%';
+    document.getElementById('progLabel').textContent = 'Confirmado';
+    document.getElementById('progSteps').textContent = '✓ Feito!';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 500);
+}
+
+function copiarCodigo() {
+  if (!codigoGerado) return;
+  navigator.clipboard.writeText(codigoGerado).then(() => {
+    const tip = document.getElementById('copied-tip');
+    tip.classList.add('show');
+    burst('📋');
+    showToast('Código copiado! 📋');
+    setTimeout(() => tip.classList.remove('show'), 2500);
+  }).catch(() => {
+    showToast('Código: ' + codigoGerado);
+  });
+}
+
+// Máscara de telefone
+document.getElementById('f-tel').addEventListener('input', function() {
+  let v = this.value.replace(/\D/g,'');
+  if (v.length > 11) v = v.slice(0,11);
+  if (v.length > 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+  else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+  else if (v.length > 0) v = '(' + v;
+  this.value = v;
+});
+
+// Enter avança
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && current <= TOTAL && document.activeElement.tagName !== 'TEXTAREA') {
+    const btn = document.querySelector('#step-' + current + ' .btn-next');
+    if (btn) btn.click();
+  }
+});
+
+updateProg(1);
+</script>
+</body>
+</html>
